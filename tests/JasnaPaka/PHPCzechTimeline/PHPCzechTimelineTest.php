@@ -54,6 +54,7 @@ class PHPCzechTimelineTest extends TestCase
 		$this->assertFalse($timeline->isValidValue(""));
 		$this->assertTrue($timeline->isValidValue("1990"));
 		$this->assertFalse($timeline->isValidValue("abc"));
+		$this->assertTrue($timeline->isValidValue("1947, 1995"));
 	}
 
 	public function testGetTimelineSimple()
@@ -76,10 +77,12 @@ class PHPCzechTimelineTest extends TestCase
 		$timeline->addItem("2", "1976");
 		$timeline->addItem("3", "1990");
 		$timeline->addItem("4", "2005   -   2007");
+		$timeline->addItem("5", "2011, 2017");
+
 
 		$output = $timeline->getTimeline();
 		$outputStr = $this->getOutputStr($output);
 
-		$this->assertEquals("[2:1976][3:1990][1:2001 - 2002][4:2005   -   2007]", $outputStr);
+		$this->assertEquals("[2:1976][3:1990][1:2001 - 2002][4:2005   -   2007][5:2011, 2017]", $outputStr);
 	}
 }

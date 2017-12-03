@@ -54,6 +54,16 @@ class PHPCzechTimeline
 			}
 		}
 
+		// uvedeno více dat oddělených čárkou
+		if (substr_count($value, ",") >= 1) {
+			$parts = explode(",", $value);
+			$size = sizeof($parts);
+
+			if ($this->getIsNumber($parts[$size-1])) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -76,10 +86,17 @@ class PHPCzechTimeline
 	private function normalizeValue($value) {
 
 		if (strpos($value, "-")) {
-			return explode("-", $value)[0];
+			return (int) explode("-", $value)[0];
 		}
 
-		return $value;
+		if (strpos($value, ",")) {
+			$parts = explode(",", $value);
+			$size = sizeof($parts);
+
+			return (int) $parts[$size - 1];
+		}
+
+		return (int) $value;
 	}
 
 	private function getIsNumber($value) {
