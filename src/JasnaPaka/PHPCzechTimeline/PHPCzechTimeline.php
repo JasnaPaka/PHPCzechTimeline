@@ -55,10 +55,10 @@ class PHPCzechTimeline
 					return 0;
 				}
 
-				return ($a->getRate() > $b->getRate()) ? 1 : -1;
+				return ($a->getRate() < $b->getRate()) ? 1 : -1;
 			}
 
-			return ($aValue > $bValue) ? 1 : -1;
+			return (((int) $aValue) > ((int) $bValue)) ? 1 : -1;
 		});
 
 		return array_values($items);
@@ -66,8 +66,27 @@ class PHPCzechTimeline
 
 	private function normalizeValue($value) {
 
+		$nonAsciiValue = $this->getNonAsciiStr($value);
+
+		// Výraz "17. století"
+		if ($this->endsWith($nonAsciiValue, ". stoleti")) {
+			$str = $nonAsciiValue;
+			$str = str_replace(". stoleti", "", $str);
+			if ($this->getIsNumber($str)) {
+				return (int) $str."00";
+			}
+		}
+
+		// Výraz "60. léta" (je myšleno 1960 apod.).
+		if ($this->endsWith($nonAsciiValue, ". leta")) {
+			$str = $nonAsciiValue;
+			$str = str_replace(". leta", "", $str);
+			if ($this->getIsNumber($str)) {
+				return (int) "19".$str;
+			}
+		}
+
 		if (strpos($value, "-")) {
-			$value1 = (int) explode("-", $value)[0];
 			$value2 = (int) explode("-", $value)[1];
 
 			if ($value2 >= 100) {
@@ -116,11 +135,37 @@ class PHPCzechTimeline
 
 	/*
 	 *
-	 * 100 - rok
+	 * 100 - rok (např. 1950)
+	 * 150 - přibližně rok (např. "kolem 1950")
 	 *
 	 */
 	protected function getRating($value) {
 
+		$value = $this->getNonAsciiStr($value);
+
+		if (strpos(strtolower($value), ". stoleti") !== false) {
+			return 120;
+		}
+
+		if (strpos(strtolower($value), ". leta") !== false) {
+			return 120;
+		}
+
+		if (strpos(strtolower($value), "kolem") !== false) {
+			return 150;
+		}
+
+		if (strpos(strtolower($value), "asi") !== false) {
+			return 200;
+		}
+
+		if (mb_strpos(strtolower($value), "pred", 0) !== false) {
+			return 250;
+		}
+
+		if (strpos(strtolower($value), "cca.") !== false) {
+			return 200;
+		}
 
 		return 100;
 	}
@@ -128,5 +173,23 @@ class PHPCzechTimeline
 	private function getIsNumber($value) {
 		$value = trim($value);
 		return ((string)(int)$value) == $value;
+	}
+
+	private function getNonAsciiStr($str) {
+
+		$str = str_replace("ř", "r", $str);
+		$str = str_replace("ť", "t", $str);
+		$str = str_replace("í", "i", $str);
+		$str = str_replace("é", "e", $str);
+
+		return $str;
+	}
+
+	function endsWith($haystack, $needle)
+	{
+		$length = strlen($needle);
+
+		return $length === 0 ||
+			(substr($haystack, -$length) === $needle);
 	}
 }
