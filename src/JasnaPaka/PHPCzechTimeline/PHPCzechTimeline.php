@@ -36,35 +36,12 @@ class PHPCzechTimeline
 			throw new \Exception(("Hodnota je neplatna."));
 		}
 
-		$item = new TimelineItem($id, $value);
+		$item = new TimelineItem($id, $value, $this->getRating($value));
 		$this->items[$id] = $item;
 	}
 
 	public function isValidValue($value) {
-		// uveden pouze rok
-		if($this->getIsNumber($value)) {
-			return true;
-		}
-
-		// uveden rok od/do - oddělovač pomlčka
-		if (substr_count($value, "-") == 1) {
-			$parts = explode("-", $value);
-			if ($this->getIsNumber($parts[0]) && $this->getIsNumber($parts[1])) {
-				return true;
-			}
-		}
-
-		// uvedeno více dat oddělených čárkou
-		if (substr_count($value, ",") >= 1) {
-			$parts = explode(",", $value);
-			$size = sizeof($parts);
-
-			if ($this->getIsNumber($parts[$size-1])) {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->normalizeValue($value) == null ? false: true;
 	}
 
 	public function getTimeline() {
@@ -74,7 +51,11 @@ class PHPCzechTimeline
 			$bValue = $this->normalizeValue($b->getValue());
 
 			if ($aValue == $bValue) {
-				return 0;
+				if ($a->getRate() == $b->getRate()) {
+					return 0;
+				}
+
+				return ($a->getRate() > $b->getRate()) ? 1 : -1;
 			}
 
 			return ($aValue > $bValue) ? 1 : -1;
@@ -86,17 +67,62 @@ class PHPCzechTimeline
 	private function normalizeValue($value) {
 
 		if (strpos($value, "-")) {
-			return (int) explode("-", $value)[0];
+			$value1 = (int) explode("-", $value)[0];
+			$value2 = (int) explode("-", $value)[1];
+
+			if ($value2 >= 100) {
+				return $value2;
+			}
+
+			// rok je pouze dvoupísmený, přidáme první dva
+			$str = substr(explode("-", $value)[0], 0, 2);
+
+			return $str.$value2;
 		}
 
 		if (strpos($value, ",")) {
 			$parts = explode(",", $value);
 			$size = sizeof($parts);
 
+			$lastPart = $parts[$size-1];
+
+			// případné poznámky navíc eliminujeme
+			preg_match_all('!\d+!', $lastPart, $matches);
+			if (sizeof ($matches) == 1) {
+				$lastPart = $matches[0][0];
+			}
+
+			if ($this->getIsNumber($lastPart)) {
+				return (int) $lastPart;
+			}
+
 			return (int) $parts[$size - 1];
 		}
 
-		return (int) $value;
+		if ($this->getIsNumber($value)) {
+			return (int) $value;
+		}
+
+		// případné poznámky navíc eliminujeme
+		preg_match_all('!\d+!', $value, $matches);
+		if (sizeof ($matches) == 1) {
+			if ($this->getIsNumber($matches[0][0])) {
+				return (int) $matches[0][0];
+			}
+		}
+
+		return null;
+	}
+
+	/*
+	 *
+	 * 100 - rok
+	 *
+	 */
+	protected function getRating($value) {
+
+
+		return 100;
 	}
 
 	private function getIsNumber($value) {
