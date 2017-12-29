@@ -66,6 +66,8 @@ class PHPCzechTimelineTest extends TestCase
 		$this->assertTrue($timeline->isValidValue("cca. 1935"));
 		$this->assertTrue($timeline->isValidValue("17. století"));
 		$this->assertTrue($timeline->isValidValue("60. léta"));
+		$this->assertTrue($timeline->isValidValue("Přelom 17. a 18. století"));
+		$this->assertTrue($timeline->isValidValue("Počátek 17. století"));
 	}
 
 	public function testGetTimelineSimple()
@@ -187,5 +189,33 @@ class PHPCzechTimelineTest extends TestCase
 		$outputStr = $this->getOutputStr($output);
 
 		$this->assertEquals("[2:1959][1:60. léta][3:1960][4:1961]", $outputStr);
+	}
+
+	public function testGetTimeline5()
+	{
+		$timeline = new PHPCzechTimeline();
+		$timeline->addItem("1", "Přelom 17. a 18. století");
+		$timeline->addItem("2", "1799");
+		$timeline->addItem("3", "1800");
+		$timeline->addItem("4", "1801");
+
+		$output = $timeline->getTimeline();
+		$outputStr = $this->getOutputStr($output);
+
+		$this->assertEquals("[2:1799][1:Přelom 17. a 18. století][3:1800][4:1801]", $outputStr);
+	}
+
+	public function testGetTimeline6()
+	{
+		$timeline = new PHPCzechTimeline();
+		$timeline->addItem("1", "Počátek 18. století");
+		$timeline->addItem("2", "1799");
+		$timeline->addItem("3", "1800");
+		$timeline->addItem("4", "1801");
+
+		$output = $timeline->getTimeline();
+		$outputStr = $this->getOutputStr($output);
+
+		$this->assertEquals("[2:1799][1:Počátek 18. století][3:1800][4:1801]", $outputStr);
 	}
 }

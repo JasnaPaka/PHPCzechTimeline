@@ -86,6 +86,30 @@ class PHPCzechTimeline
 			}
 		}
 
+		// Výraz "Přelom 17. a 18. století"
+		if (strpos($nonAsciiValue, "Prelom") === 0) {
+			preg_match_all('!\d+!', $value, $matches);
+			if (sizeof ($matches) == 1) {
+				$val = $matches[0][1];
+				if (strlen($val) == 2) {
+					return (int)$val . "00";
+				}
+			}
+		}
+
+		// Výraz "Počátek 18. století"
+		if ((strpos($nonAsciiValue, "Pocatek") === 0)
+			&& ($this->endsWith($nonAsciiValue, ". stoleti"))) {
+			preg_match_all('!\d+!', $value, $matches);
+
+			if (sizeof ($matches) == 1) {
+				$val = $matches[0][0];
+				if (strlen($val) == 2) {
+					return (int)$val . "00";
+				}
+			}
+		}
+
 		if (strpos($value, "-")) {
 			$value2 = (int) explode("-", $value)[1];
 
@@ -155,6 +179,10 @@ class PHPCzechTimeline
 			return 150;
 		}
 
+		if (strpos(strtolower($value), "prelom") !== false) {
+			return 150;
+		}
+
 		if (strpos(strtolower($value), "asi") !== false) {
 			return 200;
 		}
@@ -164,6 +192,11 @@ class PHPCzechTimeline
 		}
 
 		if (strpos(strtolower($value), "cca.") !== false) {
+			return 200;
+		}
+
+		if ((strpos(strtolower($value), "pocatek") !== false)
+			&& (strpos(strtolower($value), ". stoleti") !== false)) {
 			return 200;
 		}
 
@@ -181,11 +214,13 @@ class PHPCzechTimeline
 		$str = str_replace("ť", "t", $str);
 		$str = str_replace("í", "i", $str);
 		$str = str_replace("é", "e", $str);
+		$str = str_replace("č", "c", $str);
+		$str = str_replace("á", "a", $str);
 
 		return $str;
 	}
 
-	function endsWith($haystack, $needle)
+	private function endsWith($haystack, $needle)
 	{
 		$length = strlen($needle);
 
